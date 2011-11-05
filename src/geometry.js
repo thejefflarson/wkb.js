@@ -4,7 +4,7 @@ wkb.Geometry = function(data){
 wkb.Utils.mixin(wkb.Geometry.prototype, wkb.Utils.Reader, {});
 wkb.Geometry.extend = wkb.Utils.extend;
 wkb.Utils.mixin(wkb.Geometry, {
-  register : function(type, fn){
+  registerParser : function(type, fn){
     var cb;
     switch(type){
       case "WKB": 
@@ -22,6 +22,10 @@ wkb.Utils.mixin(wkb.Geometry, {
       default:
         cb = fn;
     }
-    this["parse" + type] = cb;
+    this["parse" + type] = function(data) {
+      var instance = new this.constructor(data);
+      cb(instance);
+      return instance;
+    }
   }
 });

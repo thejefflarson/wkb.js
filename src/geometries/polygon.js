@@ -1,16 +1,26 @@
 wkb.Polygon = wkb.Geometry.extend({
   type : wkb.Types.wkbGeometry,
-  children : [wkb.LineString]
+  rings : function(){
+    return this.children;
+  }
 });
 
-wkb.Polygon.register("WKB", function(binary){
-  
+wkb.Polygon.registerParser("WKB", function(instance){
+  wkb.Utils.mixin(instance, {
+    parse : {
+      
+    }
+  });
 });
 
-wkb.Polygon.register("WKT", function(){
-  
+wkb.Polygon.registerParser("WKT", function(text){
+  wkb.Utils.mixin(instance, {
+    
+  });
 });
 
-wkb.Polygon.register("JSON", function(){
-  
+wkb.Polygon.registerParser("JSON", function(json){
+  wkb.Utils.mixin(instance, {
+    
+  });
 });
