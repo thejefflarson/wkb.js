@@ -16,6 +16,10 @@ wkb.Utils = (function(){
       return child;
     },
 
+    assert : function(qualifier, message){
+      if(!qualifier) throw new Error(message);
+    },
+
     inherits : function(parent, proto){
       var child;
       
