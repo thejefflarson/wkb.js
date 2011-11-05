@@ -1,26 +1,36 @@
 wkb.Factory = function(wkb){
   this.dv = new DataView(wkb);
+  this.parse();
 }
 
-wkb.Factory.prototype = wkb.Utils.extend(wkb.Factory.prototype, wkb.Mixins.Reader, {
+wkb.Utils.mixin(wkb.Factory.prototype, wkb.Mixins.Reader, {
   parse : function(){
     return this._dispatch();
   },
 
   _dispatch : function(){
+    this._getUInt();
     switch(num){
-      case 1: // point
+      case wkb.Type.Point: // point
         console.log("point");
         break;
-      case 2: // linestring
+      case wkb.Type.LineString: // linestring
         console.log("linestring");
         break;
-      case 3: // poly
+      case wkb.Type.PolyGon: // poly
         n = this._getU32();
         for(var i=0; i < n; i++)
           this._plotPart();
         break;
-      case 6: // multipoly
+      case wkb.Type.wkbMultiLineString:
+        n = this._getU32();
+        for(var i=0; i < n; i++)
+          this._dispatch();
+      case wkb.Type.wkbMultiPolygon: // multipoly
+        n = this._getU32();
+        for(var i=0; i < n; i++)
+          this._dispatch();
+      case wkb.Type.wkbGeometryCollection:
         n = this._getU32();
         for(var i=0; i < n; i++)
           this._dispatch();

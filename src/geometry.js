@@ -1,8 +1,7 @@
 wkb.Geometry = function(dv){
-  
+  this.dv = dv;
 }
-
-wkb.Geometry.prototype = {
-  constructor: Geometry,
-  
-}
+wkb.Utils.extend(wkb.Geometry.prototype, {
+  constructor: Geometry
+});
+wkb.Geometry.extend = wkb.Utils.extend;
