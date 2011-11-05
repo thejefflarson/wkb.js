@@ -18,18 +18,21 @@ wkb.Utils = (function(){
 
     inherits : function(parent, proto){
       var child;
-      if(child.hasOwnProperty('constructor')) {
-        child = child.constructor
+      
+      if(proto.hasOwnProperty('constructor')) {
+        child = proto.constructor
       } else {
         child = function(){ return parent.apply(this, arguments); };
       }
+      wkb.Utils.mixin(child, parent);
 
       ctor.prototype = parent.prototype;
       child.prototype = new ctor();
       child.protoype.constructor = child.constructor;
+      
       wkb.Utils.mixin(child.prototype, proto);
       child.__super__ = parent.prototype;
       return child;
     }
   }
-});
+})();
