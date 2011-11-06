@@ -7,7 +7,7 @@ wkb.Polygon = wkb.Geometry.extend({
 
 wkb.Polygon.registerParser("WKB", function(instance){
   wkb.Utils.mixin(instance, {
-    parse : {
+    rings : function(){
       
     }
   });
@@ -15,12 +15,16 @@ wkb.Polygon.registerParser("WKB", function(instance){
 
 wkb.Polygon.registerParser("WKT", function(text){
   wkb.Utils.mixin(instance, {
-    
+    rings : function(){
+      
+    }
   });
 });
 
 wkb.Polygon.registerParser("JSON", function(json){
   wkb.Utils.mixin(instance, {
-    
+    rings : function(){
+      
+    }
   });
 });
