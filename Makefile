@@ -1,8 +1,7 @@
-COMPILER = uglifyjs
-LINT = jshint
-TEST = vows
+COMPILER = ./node_modules/uglify-js/bin/uglifyjs
+LINT = ./node_modules/jshint/bin/
 
-all: wkb.js wkb.min.js
+all: wkb.js wkb.min.js package.json
 
 wkb.js: src/preamble.js \
 		src/types.js \
@@ -19,11 +18,12 @@ wkb.js: Makefile
 	cat $(filter %.js, $^) > $@
 
 wkb.min.js: wkb.js
-	$(COMPILER) $^ > $@
+	$(COMPILER) $(filter %.js, $^) > $@
 
 lint: wkb.js
-	$(LINT) $^
+	$(LINT) $(filter %.js, $^)
 
-#test:
+dep:
+	npm install
 
-.PHONY: lint all
+.PHONY: lint all dep
