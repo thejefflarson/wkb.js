@@ -11,7 +11,7 @@ wkb.Utils.mixin(wkb.Geometry, {
         cb = function() { 
           wkb.Utils.assert(wkb.root.DataView && wkb.root.ArrayBuffer,
             "Can't parse WKB without DataView and ArrayBuffer"); 
-          fn.call(this, arguments); 
+          fn.call(this, arguments);
         }
         break;
       case "JSON":

@@ -38,5 +38,6 @@ wkb.Utils = (function(){
       child.__super__ = parent.prototype;
       return child;
     }
+    // take a look at endiannes: http://svn.osgeo.org/postgis/trunk/raster/rt_core/rt_api.c
   }
 })();
