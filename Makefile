@@ -1,7 +1,8 @@
 COMPILER = ./node_modules/uglify-js/bin/uglifyjs
 LINT = ./node_modules/jshint/bin/
 
-all: wkb.js wkb.min.js package.json
+all: wkb.js
+minify: wkb.min.js
 
 wkb.js: src/preamble.js \
 		src/types.js \

@@ -85,6 +85,10 @@ wkb.Utils = (function(){
     // take a look at endiannes: http://svn.osgeo.org/postgis/trunk/raster/rt_core/rt_api.c
   };
 })();
+
+wkb.debug = function(flag){
+  wkb.Utils.debug = !!flag;
+};
 wkb.Factory = function(wkb){
   this.data = new DataView(wkb);
 };
