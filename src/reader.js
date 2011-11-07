@@ -2,7 +2,7 @@ wkb.Mixins.Reader = {
   offset : 0,
 
   advance : function(by){
-    return this.offset = this.offset + by;
+    return (this.offset = this.offset + by);
   },
 
   rewind : function(by){
@@ -18,4 +18,4 @@ wkb.Mixins.Reader = {
     this.advance(this.UINT32);
     return num;
   }
-}
+};
