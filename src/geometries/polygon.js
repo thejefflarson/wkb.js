@@ -30,7 +30,7 @@ wkb.Polygon.registerParser("WKB", function(instance){
       wkb.Utils.assert(this.data.getUInt8(1) == this.type, "Wrong type for Polygon");
       var offset = this.byteOffset;
       for(var i = 0; i < this.numRings(); i++){
-        var ring = new LineString(new DataView(this.data.buffer, offset));
+        var ring = wkb.LineString.parseWKB(new DataView(this.data.buffer, offset));
         this.rings.push(ring);
         offset = ring.byteOffset() + offset;
       }

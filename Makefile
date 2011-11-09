@@ -1,5 +1,5 @@
 COMPILER = ./node_modules/uglify-js/bin/uglifyjs
-LINT = ./node_modules/jshint/bin/
+LINT = ./node_modules/jshint/bin/hint
 
 all: wkb.js
 minify: wkb.min.js
@@ -12,8 +12,7 @@ wkb.js: src/preamble.js \
 		src/geometries/linearring.js \
 		src/geometries/linestring.js \
 		src/geometries/polygon.js \
-		src/geometry_collection.js \
-		src/reader.js
+		src/geometry_collection.js
 
 wkb.js: Makefile
 	cat $(filter %.js, $^) > $@
@@ -26,5 +25,8 @@ lint: wkb.js
 
 dep:
 	npm install
+
+test: wkb.js
+	open test/index.html
 
 .PHONY: lint all dep

@@ -197,8 +197,14 @@ wkb.Polygon.registerParser("WKB", function(instance){
               this.numPoints() * 2 * wkt.Type.b.Float32 - wkt.Type.b.Int8;
     },
 
-    _parse : function(){
+    pointAt : function(idx){
+      return this.points(idx);
+    },
 
+    _parse : function(){
+      var points = this.numPoints();
+      for(var i = 0; i < points * 2; i += 2)
+        this.points.push(wkb.Point.parseWKB(new DataView(this.data.buffer, i * wkb.b.Uint64)));
     }
   });
 });
@@ -237,7 +243,7 @@ wkb.Polygon.registerParser("WKB", function(instance){
       wkb.Utils.assert(this.data.getUInt8(1) == this.type, "Wrong type for Polygon");
       var offset = this.byteOffset;
       for(var i = 0; i < this.numRings(); i++){
-        var ring = new LineString(new DataView(this.data.buffer, offset));
+        var ring = wkb.LineString.parseWKB(new DataView(this.data.buffer, offset));
         this.rings.push(ring);
         offset = ring.byteOffset() + offset;
       }
@@ -260,24 +266,3 @@ wkb.Polygon.registerParser("JSON", function(json){
     }
   });
 });
-wkb.Mixins.Reader = {
-  offset : 0,
-
-  advance : function(by){
-    return (this.offset = this.offset + by);
-  },
-
-  rewind : function(by){
-    return this.advance(by * -1);
-  },
-
-  reset : function(){
-    return this.rewind(this.offset);
-  },
-
-  _getU32 : function(){
-    var num = this.dv.getUint32(this.offset);
-    this.advance(this.UINT32);
-    return num;
-  }
-};

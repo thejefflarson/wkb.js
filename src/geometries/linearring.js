@@ -25,8 +25,14 @@ wkb.Polygon.registerParser("WKB", function(instance){
               this.numPoints() * 2 * wkt.Type.b.Float32 - wkt.Type.b.Int8;
     },
 
-    _parse : function(){
+    pointAt : function(idx){
+      return this.points(idx);
+    },
 
+    _parse : function(){
+      var points = this.numPoints();
+      for(var i = 0; i < points * 2; i += 2)
+        this.points.push(wkb.Point.parseWKB(new DataView(this.data.buffer, i * wkb.b.Uint64)));
     }
   });
 });
