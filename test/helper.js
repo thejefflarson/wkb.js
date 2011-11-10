@@ -15,5 +15,5 @@ var binAjax = function(method, url, cb, err){
 };
 
 var closeEnough = function(one, other){
-  return ~~(one - other) < 1e-6;
+  return Math.abs(one - other) < 1e-6;
 };

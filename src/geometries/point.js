@@ -8,11 +8,11 @@ wkb.Point = wkb.Geometry.extend({
 wkb.Point.registerParser("WKB", function(instance){
   return {
     getX : function(){
-      return this.data.getFloat64(0);
+      return this.data.getFloat64(0, this.endian);
     },
 
     getY : function(){
-      return this.data.getFloat64(wkb.Type.b.Float64);
+      return this.data.getFloat64(wkb.Type.b.Float64, this.endian);
     }
   };
 });

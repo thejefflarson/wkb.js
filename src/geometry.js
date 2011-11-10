@@ -10,7 +10,7 @@ wkb.Utils.mixin(wkb.Geometry.prototype, {
     var children = "";
     if(this.geometries && this.geometries.length > 0)
       children = " " + this.geometries.map(function(it){ return it.toString(); }).join(", ");
-    
+
     return "<" + wkb.Type.toString(this.type) + children + ">";
   }
 });
@@ -38,7 +38,7 @@ wkb.Geometry.registerParser("WKB", function(instance){
 
     numGeometries : function(){
                                  // type + numrings
-      return this.data.getUint32(wkb.Type.b.Int8 + wkb.Type.b.Uint32);
+      return this.data.getUint32(wkb.Type.b.Int8 + wkb.Type.b.Uint32, this.endian());
     },
 
     byteOffset : function(){
@@ -50,11 +50,12 @@ wkb.Geometry.registerParser("WKB", function(instance){
     },
 
     parse : function(){
-      wkb.Utils.assert(this.data.getUint32(1) !== wkb.Type.k.wkbUnknown, "Geometry is an abstract type");
-      wkb.Utils.assert(this.data.getUint32(1) === this.type, "Wrong type for " + this);
+      wkb.Utils.assert(this.data.getUint32(1, this.endian()) !== wkb.Type.k.wkbUnknown, "Geometry is an abstract type");
+      wkb.Utils.assert(this.data.getUint32(1, this.endian()) === this.type, "Wrong type for " + this);
       var offset = this.byteOffset();
       for(var i = 0; i < this.numGeometries(); i++){
         var child = this._child.parseWKB(new DataView(this.data.buffer, this.data.byteOffset + offset));
+        child.endian = this.endian();
         this.geometries.push(child);
         offset = child.byteLength() + offset;
       }
