@@ -4,7 +4,7 @@ wkb.LinearRing = wkb.Geometry.extend({
 });
 
 wkb.LinearRing.registerParser("WKB", function(instance){
-  wkb.Utils.mixin(instance, {
+  return {
     numGeometries : function(){
       return this.data.getUint32(0);
     },
@@ -18,8 +18,6 @@ wkb.LinearRing.registerParser("WKB", function(instance){
       wkb.Utils.assert(idx < this.numGeometries(), "Out of range.");
       return wkb.Point.parseWKB(new DataView(this.data.buffer, 
         this.data.byteOffset + wkb.Type.b.Uint32 + wkb.Type.b.Float64 * 2 * idx));
-    },
-
-    parse : function(){}
-  });
+    }
+  };
 });

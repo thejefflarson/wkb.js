@@ -147,14 +147,14 @@ wkb.Utils.mixin(wkb.Geometry, {
         cb = function() {
           wkb.Utils.assert(DataView && ArrayBuffer,
                            "Can't parse WKB without DataView and ArrayBuffer");
-          fn.apply(this, arguments);
+          return fn.apply(this, arguments);
         };
         break;
       case "JSON":
         cb = function() {
           wkb.Utils.assert(wkb.root.JSON,
                            "Can't parse GeoJSON without json support");
-          fn.apply(this, arguments);
+          return fn.apply(this, arguments);
         };
         break;
       default:
@@ -162,8 +162,9 @@ wkb.Utils.mixin(wkb.Geometry, {
     }
     this["parse" + type] = function(data) {
       var instance = new (this.prototype.constructor)(data);
-      cb(instance);
-      instance.parse();
+      var mixin = cb(instance);
+      wkb.Utils.mixin(instance, mixin);
+      if(instance.parse) instance.parse();
       return instance;
     };
   }
@@ -172,7 +173,7 @@ wkb.Utils.mixin(wkb.Geometry, {
 
 // templates
 wkb.Geometry.registerParser("WKB", function(instance){
-  wkb.Utils.mixin(instance, {
+  return {
     endian : function(){
       return !!this.data.getUint8(0);
     },
@@ -200,7 +201,7 @@ wkb.Geometry.registerParser("WKB", function(instance){
         offset = child.byteLength() + offset;
       }
     }
-  });
+  }
 });
 
 wkb.Geometry.registerParser("WKT", function(text){});
@@ -215,17 +216,15 @@ wkb.Point = wkb.Geometry.extend({
 });
 
 wkb.Point.registerParser("WKB", function(instance){
-  wkb.Utils.mixin(instance, {
-    parse : function(){},
-
+  return {
     getX : function(){
-      return this.data.getFloat32(1);
+      return this.data.getFloat64(0);
     },
 
     getY : function(){
-      return this.data.getFloat32(2);
+      return this.data.getFloat64(wkb.Type.b.Float64);
     }
-  });
+  };
 });
 wkb.LinearRing = wkb.Geometry.extend({
   type : wkb.Type.k.wkbLinearRing,
@@ -233,7 +232,7 @@ wkb.LinearRing = wkb.Geometry.extend({
 });
 
 wkb.LinearRing.registerParser("WKB", function(instance){
-  wkb.Utils.mixin(instance, {
+  return {
     numGeometries : function(){
       return this.data.getUint32(0);
     },
@@ -244,17 +243,11 @@ wkb.LinearRing.registerParser("WKB", function(instance){
     },
 
     pointAt : function(idx){
-      return this.points(idx);
-    },
-
-    parse : function(){
-      var points = this.numGeometries();
-
-      for(var i = 0; i < points * 2 - 1; i += 2){
-        this.geometries.push(this._child.parseWKB(new DataView(this.data.buffer, i * wkb.Type.b.Float64)));
-      }
+      wkb.Utils.assert(idx < this.numGeometries(), "Out of range.");
+      return wkb.Point.parseWKB(new DataView(this.data.buffer, 
+        this.data.byteOffset + wkb.Type.b.Uint32 + wkb.Type.b.Float64 * 2 * idx));
     }
-  });
+  };
 });
 wkb.LineString = wkb.Geometry.extend({
   type : wkb.Type.k.LineString,

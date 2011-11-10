@@ -1,7 +1,15 @@
-var str2buffer = function(str) {
-    var idx, len = str.length, arr = new Array(len);
-    for (idx = 0; idx < len; ++idx)
-      arr[idx] = str.charCodeAt(idx) & 0xFF;
-    // You may create an ArrayBuffer from a standard array (of values) as follows:
-    return new Uint8Array(arr).buffer;
+var binAjax = function(method, url, cb, err){
+  err = (err || function(){});
+  var xhr = new XMLHttpRequest();
+  xhr.addEventListener("load", function(e){
+    if(e.target.status == "200")
+      cb(e.target);
+    else
+      err(e.target);
+  }, false);
+  xhr.open(method, url);
+  xhr.overrideMimeType('text/plain; charset=x-user-defined');  
+
+  xhr.responseType = "arraybuffer";
+  xhr.send(null);
 }

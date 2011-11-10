@@ -6,9 +6,7 @@ wkb.Point = wkb.Geometry.extend({
 });
 
 wkb.Point.registerParser("WKB", function(instance){
-  wkb.Utils.mixin(instance, {
-    parse : function(){},
-
+  return {
     getX : function(){
       return this.data.getFloat64(0);
     },
@@ -16,5 +14,5 @@ wkb.Point.registerParser("WKB", function(instance){
     getY : function(){
       return this.data.getFloat64(wkb.Type.b.Float64);
     }
-  });
+  };
 });
