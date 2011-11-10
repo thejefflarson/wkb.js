@@ -1,38 +1,29 @@
 wkb.LinearRing = wkb.Geometry.extend({
-  constructor : function(data, endian){
-    wkb.Geometry.call(this, data);
-    this.endian = function(){ return endian; };
-    this.points = [];
-  },
-
-  type : wkb.k.LinearRing,
-
-  numPoints : function(){
-    return this.points.length;
-  }
+  type : wkb.Type.k.wkbLinearRing,
+  _child : wkb.Point
 });
 
-wkb.Polygon.registerParser("WKB", function(instance){
+wkb.LinearRing.registerParser("WKB", function(instance){
   wkb.Utils.mixin(instance, {
-    numPoints : function(){
-                              // endian offset
-      return this.data.getUInt32(wkt.Type.b.Int8, this.endian());
+    numGeometries : function(){
+      return this.data.getUint32(0);
     },
 
-    byteOffset : function(){
-           //endian + numPoints * 2 * double
-      return wkt.Type.b.Int8 + wkt.Type.b.UInt32 +
-              this.numPoints() * 2 * wkt.Type.b.Float32 - wkt.Type.b.Int8;
+    byteLength : function(){
+             // numPoints * 2 * double
+      return wkb.Type.b.Uint32 + this.numGeometries() * 2 * wkb.Type.b.Float64;
     },
 
     pointAt : function(idx){
       return this.points(idx);
     },
 
-    _parse : function(){
-      var points = this.numPoints();
-      for(var i = 0; i < points * 2; i += 2)
-        this.points.push(wkb.Point.parseWKB(new DataView(this.data.buffer, i * wkb.b.Uint64)));
+    parse : function(){
+      var points = this.numGeometries();
+
+      for(var i = 0; i < points * 2 - 1; i += 2){
+        this.geometries.push(this._child.parseWKB(new DataView(this.data.buffer, i * wkb.Type.b.Float64)));
+      }
     }
   });
 });

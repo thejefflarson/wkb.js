@@ -9,9 +9,11 @@ wkb.js: src/preamble.js \
 		src/utils.js \
 		src/factory.js \
 		src/geometry.js \
+		src/geometries/point.js \
 		src/geometries/linearring.js \
 		src/geometries/linestring.js \
-		src/geometries/polygon.js \
+  	src/geometries/polygon.js \
+  	src/geometries/multipolygon.js \
 		src/geometry_collection.js
 
 wkb.js: Makefile

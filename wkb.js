@@ -53,7 +53,7 @@ wkb.Utils = (function(){
     },
 
     extend : function(proto) {
-      var child = inherits(this, proto);
+      var child = wkb.Utils.inherits(this, proto);
       child.extend = this.extend;
       return child;
     },
@@ -76,7 +76,7 @@ wkb.Utils = (function(){
 
       ctor.prototype = parent.prototype;
       child.prototype = new ctor();
-      child.protoype.constructor = child.constructor;
+      child.prototype.constructor = child;
 
       wkb.Utils.mixin(child.prototype, proto);
       child.__super__ = parent.prototype;
@@ -89,35 +89,32 @@ wkb.Utils = (function(){
 wkb.debug = function(flag){
   wkb.Utils.debug = !!flag;
 };
-wkb.Factory = function(wkb){
-  this.data = new DataView(wkb);
-};
+wkb.Factory = function(){};
 
-wkb.Utils.mixin(wkb.Factory.prototype, wkb.Mixins.Reader, {
+wkb.Utils.mixin(wkb.Factory.prototype, {
   parseWKT : function(data){
-    return this._dispatch(data, 'fromWKT');
+    return this._dispatch(data, 'parseWKT');
   },
 
   parseWKB : function(data){
-    return this._dispatch(data, 'fromWKB');
+    return this._dispatch(data, 'parseWKB');
   },
 
   _dispatch : function(data, func){
-    this.advance(this.UINT8);
-    var n, num = this._getU32();
+    var num = data.getUint32(1);
     switch(num){
       case wkb.Type.k.wkbPoint:
-        return wkb.Point[func];
+        return wkb.Point[func](data);
       case wkb.Type.k.wkbLineString:
-        return wkb.LineString[func];
+        return wkb.LineString[func](data);
       case wkb.Type.k.wkbPolygon:
-        return wkb.Type.k.Polygon[func];
+        return wkb.Type.k.Polygon[func](data);
       case wkb.Type.k.wkbMultiLineString:
-        return wkb.MultiLineString[func];
+        return wkb.MultiLineString[func](data);
       case wkb.Type.k.wkbMultiPolygon:
-        return wkb.MultiPolygon[func];
+        return wkb.MultiPolygon[func](data);
       case wkb.Type.k.wkbGeometryCollection:
-        return wkb.GeometryCollection[func];
+        return wkb.GeometryCollection[func](data);
       default:
         wkb.Utils.assert(false, "Unknown geometry type");
     }
@@ -125,13 +122,18 @@ wkb.Utils.mixin(wkb.Factory.prototype, wkb.Mixins.Reader, {
 });
 wkb.Geometry = function(data){
   this.data = data;
-  this._parse();
+  this.geometries = [];
 };
 
-wkb.Utils.mixin(wkb.Geometry.prototype, wkb.Utils.Reader, {
-  type : wkb.Types.k.wkbUnknown,
-  parse : function(){
-    wkb.Utils.assert(false, "Geometry is an abstract type.");
+wkb.Utils.mixin(wkb.Geometry.prototype, {
+  type : wkb.Type.k.wkbUnknown,
+  _child : null,
+  toString : function(){
+    return "<" + wkb.Type.toString(this.type) +
+      (this.geometries && this.geometries.length > 0
+        ? " " + this.geometries.map(function(it){ return it.toString(); }).join(", ")
+        : "") +
+      ">";
   }
 });
 
@@ -143,126 +145,129 @@ wkb.Utils.mixin(wkb.Geometry, {
     switch(type){
       case "WKB":
         cb = function() {
-          wkb.Utils.assert(wkb.root.DataView && wkb.root.ArrayBuffer,
+          wkb.Utils.assert(DataView && ArrayBuffer,
                            "Can't parse WKB without DataView and ArrayBuffer");
-          fn.call(this, arguments);
+          fn.apply(this, arguments);
         };
         break;
       case "JSON":
         cb = function() {
           wkb.Utils.assert(wkb.root.JSON,
                            "Can't parse GeoJSON without json support");
-          fn.call(this, arguments);
+          fn.apply(this, arguments);
         };
         break;
       default:
         cb = fn;
     }
     this["parse" + type] = function(data) {
-      var instance = new this.constructor(data);
+      var instance = new (this.prototype.constructor)(data);
       cb(instance);
-      instance._parse();
+      instance.parse();
       return instance;
     };
   }
 });
 
-wkb.Polygon.registerParser("WKB", function(instance){});
-wkb.Polygon.registerParser("WKT", function(text){});
-wkb.Polygon.registerParser("JSON", function(json){});
-wkb.LinearRing = wkb.Geometry.extend({
-  constructor : function(data, endian){
-    wkb.Geometry.call(this, data);
-    this.endian = function(){ return endian; };
-    this.points = [];
-  },
 
-  type : wkb.k.LinearRing,
-
-  numPoints : function(){
-    return this.points.length;
-  }
-});
-
-wkb.Polygon.registerParser("WKB", function(instance){
+// templates
+wkb.Geometry.registerParser("WKB", function(instance){
   wkb.Utils.mixin(instance, {
-    numPoints : function(){
-                              // endian offset
-      return this.data.getUInt32(wkt.Type.b.Int8, this.endian());
+    endian : function(){
+      return !!this.data.getUint8(0);
+    },
+
+    numGeometries : function(){
+                                 // type + numrings
+      return this.data.getUint32(wkb.Type.b.Int8 + wkb.Type.b.Uint32);
     },
 
     byteOffset : function(){
-           //endian + numPoints * 2 * double
-      return wkt.Type.b.Int8 + wkt.Type.b.UInt32 +
-              this.numPoints() * 2 * wkt.Type.b.Float32 - wkt.Type.b.Int8;
+      return wkb.Type.b.Int8 + wkb.Type.b.Uint32 * 2;
+    },
+
+    byteLength : function(){
+      return this.byteOffset() + this.geometries.reduce(function(memo, ring){ return ring.byteLength() + memo; }, 0);
+    },
+
+    parse : function(){
+      wkb.Utils.assert(this.data.getUint32(1) !== wkb.Type.k.wkbUnknown, "Geometry is an abstract type");
+      wkb.Utils.assert(this.data.getUint32(1) === this.type, "Wrong type for " + this);
+      var offset = this.byteOffset();
+      for(var i = 0; i < this.numGeometries(); i++){
+        var child = this._child.parseWKB(new DataView(this.data.buffer, this.data.byteOffset + offset));
+        this.geometries.push(child);
+        offset = child.byteLength() + offset;
+      }
+    }
+  });
+});
+
+wkb.Geometry.registerParser("WKT", function(text){});
+
+wkb.Geometry.registerParser("JSON", function(json){});
+
+wkb.Point = wkb.Geometry.extend({
+  type : wkb.Type.k.wkbPoint,
+  toString : function(){
+    return "<" + wkb.Type.toString(this.type) + " x=" + this.getX() + " y=" + this.getY();
+  }
+});
+
+wkb.Point.registerParser("WKB", function(instance){
+  wkb.Utils.mixin(instance, {
+    parse : function(){},
+
+    getX : function(){
+      return this.data.getFloat32(1);
+    },
+
+    getY : function(){
+      return this.data.getFloat32(2);
+    }
+  });
+});
+wkb.LinearRing = wkb.Geometry.extend({
+  type : wkb.Type.k.wkbLinearRing,
+  _child : wkb.Point
+});
+
+wkb.LinearRing.registerParser("WKB", function(instance){
+  wkb.Utils.mixin(instance, {
+    numGeometries : function(){
+      return this.data.getUint32(0);
+    },
+
+    byteLength : function(){
+             // numPoints * 2 * double
+      return wkb.Type.b.Uint32 + this.numGeometries() * 2 * wkb.Type.b.Float64;
     },
 
     pointAt : function(idx){
       return this.points(idx);
     },
 
-    _parse : function(){
-      var points = this.numPoints();
-      for(var i = 0; i < points * 2; i += 2)
-        this.points.push(wkb.Point.parseWKB(new DataView(this.data.buffer, i * wkb.b.Uint64)));
-    }
-  });
-});
-wkb.LinearRing = wkb.Geometry.extend({
-  type : wkb.k.LinearRing
-});
-wkb.Polygon = wkb.Geometry.extend({
-  constructor : function(){
-    wkb.Geometry.call(this, arguments);
-    this.rings = [];
-  },
-  type : wkb.Types.k.wkbPolygon,
+    parse : function(){
+      var points = this.numGeometries();
 
-  numRings : function(){
-    return this.rings.length;
-  }
-});
-
-// templates
-wkb.Polygon.registerParser("WKB", function(instance){
-  wkb.Utils.mixin(instance, {
-    endian : function(){
-      return !!this.data.getUInt8(0);
-    },
-
-    numRings : function(){
-                                 // endian +       numrings + type   - zero_index
-      return this.data.getUInt32(wkt.Type.b.Int8 + wkt.Type.b.UInt32 - wkt.Type.b.Int8, this.endian());
-    },
-
-    byteOffset : function(){
-      return wkt.Type.b.Int8 + wkt.Type.b.UInt32 * 2  - wkt.Type.b.Int8;
-    },
-
-    _parse : function(){
-      wkb.Utils.assert(this.data.getUInt8(1) == this.type, "Wrong type for Polygon");
-      var offset = this.byteOffset;
-      for(var i = 0; i < this.numRings(); i++){
-        var ring = wkb.LineString.parseWKB(new DataView(this.data.buffer, offset));
-        this.rings.push(ring);
-        offset = ring.byteOffset() + offset;
+      for(var i = 0; i < points * 2 - 1; i += 2){
+        this.geometries.push(this._child.parseWKB(new DataView(this.data.buffer, i * wkb.Type.b.Float64)));
       }
     }
   });
 });
-
-wkb.Polygon.registerParser("WKT", function(text){
-  wkb.Utils.mixin(instance, {
-    rings : function(){
-
-    }
-  });
+wkb.LineString = wkb.Geometry.extend({
+  type : wkb.Type.k.LineString,
+  _child : wkb.Point
 });
-
-wkb.Polygon.registerParser("JSON", function(json){
-  wkb.Utils.mixin(instance, {
-    rings : function(){
-
-    }
-  });
+wkb.Polygon = wkb.Geometry.extend({
+  type : wkb.Type.k.wkbPolygon,
+  _child : wkb.LinearRing
+});
+wkb.MultiPolygon = wkb.GeometryCollection.extend({
+  type : wkb.Type.k.wkbMultiPolygon,
+  _child : wkb.Polygon
+});
+wkb.GeometryCollection = wkb.Geometry.extend({
+  type : wkb.Type.k.GeometryCollection
 });

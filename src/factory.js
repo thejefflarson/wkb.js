@@ -1,32 +1,29 @@
-wkb.Factory = function(wkb){
-  this.data = new DataView(wkb);
-};
+wkb.Factory = function(){};
 
-wkb.Utils.mixin(wkb.Factory.prototype, wkb.Mixins.Reader, {
+wkb.Utils.mixin(wkb.Factory.prototype, {
   parseWKT : function(data){
-    return this._dispatch(data, 'fromWKT');
+    return this._dispatch(data, 'parseWKT');
   },
 
   parseWKB : function(data){
-    return this._dispatch(data, 'fromWKB');
+    return this._dispatch(data, 'parseWKB');
   },
 
   _dispatch : function(data, func){
-    this.advance(this.UINT8);
-    var n, num = this._getU32();
+    var num = data.getUint32(1);
     switch(num){
       case wkb.Type.k.wkbPoint:
-        return wkb.Point[func];
+        return wkb.Point[func](data);
       case wkb.Type.k.wkbLineString:
-        return wkb.LineString[func];
+        return wkb.LineString[func](data);
       case wkb.Type.k.wkbPolygon:
-        return wkb.Type.k.Polygon[func];
+        return wkb.Type.k.Polygon[func](data);
       case wkb.Type.k.wkbMultiLineString:
-        return wkb.MultiLineString[func];
+        return wkb.MultiLineString[func](data);
       case wkb.Type.k.wkbMultiPolygon:
-        return wkb.MultiPolygon[func];
+        return wkb.MultiPolygon[func](data);
       case wkb.Type.k.wkbGeometryCollection:
-        return wkb.GeometryCollection[func];
+        return wkb.GeometryCollection[func](data);
       default:
         wkb.Utils.assert(false, "Unknown geometry type");
     }

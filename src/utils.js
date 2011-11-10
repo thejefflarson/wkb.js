@@ -11,7 +11,7 @@ wkb.Utils = (function(){
     },
 
     extend : function(proto) {
-      var child = inherits(this, proto);
+      var child = wkb.Utils.inherits(this, proto);
       child.extend = this.extend;
       return child;
     },
@@ -34,7 +34,7 @@ wkb.Utils = (function(){
 
       ctor.prototype = parent.prototype;
       child.prototype = new ctor();
-      child.protoype.constructor = child.constructor;
+      child.prototype.constructor = child;
 
       wkb.Utils.mixin(child.prototype, proto);
       child.__super__ = parent.prototype;

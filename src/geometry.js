@@ -1,12 +1,17 @@
 wkb.Geometry = function(data){
   this.data = data;
-  this._parse();
+  this.geometries = [];
 };
 
-wkb.Utils.mixin(wkb.Geometry.prototype, wkb.Utils.Reader, {
-  type : wkb.Types.k.wkbUnknown,
-  parse : function(){
-    wkb.Utils.assert(false, "Geometry is an abstract type.");
+wkb.Utils.mixin(wkb.Geometry.prototype, {
+  type : wkb.Type.k.wkbUnknown,
+  _child : null,
+  toString : function(){
+    return "<" + wkb.Type.toString(this.type) +
+      (this.geometries && this.geometries.length > 0
+        ? " " + this.geometries.map(function(it){ return it.toString(); }).join(", ")
+        : "") +
+      ">";
   }
 });
 
@@ -18,30 +23,65 @@ wkb.Utils.mixin(wkb.Geometry, {
     switch(type){
       case "WKB":
         cb = function() {
-          wkb.Utils.assert(wkb.root.DataView && wkb.root.ArrayBuffer,
+          wkb.Utils.assert(DataView && ArrayBuffer,
                            "Can't parse WKB without DataView and ArrayBuffer");
-          fn.call(this, arguments);
+          fn.apply(this, arguments);
         };
         break;
       case "JSON":
         cb = function() {
           wkb.Utils.assert(wkb.root.JSON,
                            "Can't parse GeoJSON without json support");
-          fn.call(this, arguments);
+          fn.apply(this, arguments);
         };
         break;
       default:
         cb = fn;
     }
     this["parse" + type] = function(data) {
-      var instance = new this.constructor(data);
+      var instance = new (this.prototype.constructor)(data);
       cb(instance);
-      instance._parse();
+      instance.parse();
       return instance;
     };
   }
 });
 
-wkb.Polygon.registerParser("WKB", function(instance){});
-wkb.Polygon.registerParser("WKT", function(text){});
-wkb.Polygon.registerParser("JSON", function(json){});
+
+// templates
+wkb.Geometry.registerParser("WKB", function(instance){
+  wkb.Utils.mixin(instance, {
+    endian : function(){
+      return !!this.data.getUint8(0);
+    },
+
+    numGeometries : function(){
+                                 // type + numrings
+      return this.data.getUint32(wkb.Type.b.Int8 + wkb.Type.b.Uint32);
+    },
+
+    byteOffset : function(){
+      return wkb.Type.b.Int8 + wkb.Type.b.Uint32 * 2;
+    },
+
+    byteLength : function(){
+      return this.byteOffset() + this.geometries.reduce(function(memo, ring){ return ring.byteLength() + memo; }, 0);
+    },
+
+    parse : function(){
+      wkb.Utils.assert(this.data.getUint32(1) !== wkb.Type.k.wkbUnknown, "Geometry is an abstract type");
+      wkb.Utils.assert(this.data.getUint32(1) === this.type, "Wrong type for " + this);
+      var offset = this.byteOffset();
+      for(var i = 0; i < this.numGeometries(); i++){
+        var child = this._child.parseWKB(new DataView(this.data.buffer, this.data.byteOffset + offset));
+        this.geometries.push(child);
+        offset = child.byteLength() + offset;
+      }
+    }
+  });
+});
+
+wkb.Geometry.registerParser("WKT", function(text){});
+
+wkb.Geometry.registerParser("JSON", function(json){});
+

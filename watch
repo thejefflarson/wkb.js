@@ -1,0 +1,26 @@
+#! /usr/bin/env node
+
+var spawn = require('child_process').spawn,
+    fs = require('fs'),
+    path = require('path');
+
+var make = function(){
+  spawn("make").stdout.on("data", function(data){ console.log(data.toString()); });
+}
+
+var bindWatcher = function(curPath){
+  fs.readdir(curPath, function(e, files){
+    files.forEach(function(file){
+      var full = path.join(curPath, file);
+      fs.stat(full, function(e, stat){
+        if(stat.isFile())
+          fs.watch(full, make);
+        else if(stat.isDirectory())
+          bindWatcher(full);
+      });
+    });
+  });
+}
+
+bindWatcher('./src');
+
