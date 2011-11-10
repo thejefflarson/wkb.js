@@ -10,11 +10,11 @@ wkb.Point.registerParser("WKB", function(instance){
     parse : function(){},
 
     getX : function(){
-      return this.data.getFloat32(1);
+      return this.data.getFloat64(0);
     },
 
     getY : function(){
-      return this.data.getFloat32(2);
+      return this.data.getFloat64(wkb.Type.b.Float64);
     }
   });
 });

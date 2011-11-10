@@ -13,6 +13,7 @@ test("should be able to parse wkb", function(){
     equals(mpolygon.geometries[0].type, wkb.Type.k.wkbPolygon);
     equals(mpolygon.geometries[0].geometries[0].type, wkb.Type.k.wkbLinearRing);
     equals(mpolygon.geometries[0].geometries[0].numGeometries(), 9807);
-    console.log(mpolygon.geometries[0].geometries[0]);
+    point = mpolygon.geometries[0].geometries[0];
+
   });
 });

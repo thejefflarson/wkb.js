@@ -15,15 +15,11 @@ wkb.LinearRing.registerParser("WKB", function(instance){
     },
 
     pointAt : function(idx){
-      return this.points(idx);
+      wkb.Utils.assert(idx < this.numGeometries(), "Out of range.");
+      return wkb.Point.parseWKB(new DataView(this.data.buffer, 
+        this.data.byteOffset + wkb.Type.b.Uint32 + wkb.Type.b.Float64 * 2 * idx));
     },
 
-    parse : function(){
-      var points = this.numGeometries();
-
-      for(var i = 0; i < points * 2 - 1; i += 2){
-        this.geometries.push(this._child.parseWKB(new DataView(this.data.buffer, i * wkb.Type.b.Float64)));
-      }
-    }
+    parse : function(){}
   });
 });
