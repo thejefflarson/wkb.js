@@ -7,10 +7,11 @@ wkb.Utils.mixin(wkb.Geometry.prototype, {
   type : wkb.Type.k.wkbUnknown,
   _child : null,
   toString : function(){
-    return "<" + wkb.Type.toString(this.type) +
-      (this.geometries && this.geometries.length > 0
-        ? " " + this.geometries.map(function(it){ return it.toString(); }).join(", ")
-        : "") + ">";
+    var children = "";
+    if(this.geometries && this.geometries.length > 0)
+      children = " " + this.geometries.map(function(it){ return it.toString(); }).join(", ");
+    
+    return "<" + wkb.Type.toString(this.type) + children + ">";
   }
 });
 
@@ -58,7 +59,7 @@ wkb.Geometry.registerParser("WKB", function(instance){
         offset = child.byteLength() + offset;
       }
     }
-  }
+  };
 });
 
 wkb.Geometry.registerParser("WKT", function(text){});
