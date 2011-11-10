@@ -7,9 +7,13 @@ var binAjax = function(method, url, cb, err){
     else
       err(e.target);
   }, false);
-  xhr.open(method, url);
-  xhr.overrideMimeType('text/plain; charset=x-user-defined');  
+  xhr.open(method, url, true);
+  xhr.overrideMimeType('text/plain; charset=x-user-defined');
 
   xhr.responseType = "arraybuffer";
   xhr.send(null);
-}
+};
+
+var closeEnough = function(one, other){
+  return ~~(one - other) < 1e-6;
+};
