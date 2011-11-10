@@ -7,6 +7,7 @@ SOURCES = src/preamble.js \
 		src/factory.js \
 		src/geometry.js \
 		src/geometries/point.js \
+  	src/geometries/pointcollection.js \
 		src/geometries/linearring.js \
 		src/geometries/linestring.js \
 		src/geometries/polygon.js \
