@@ -2,9 +2,10 @@ var binAjax = function(method, url, cb, err){
   err = (err || function(){});
   var xhr = new XMLHttpRequest();
   xhr.addEventListener("load", function(e){
-    if(e.target.status == "200")
+    if(e.target.status == "200") {
+      console.log("hooray!")
       cb(e.target);
-    else
+    } else
       err(e.target);
   }, false);
   xhr.open(method, url);

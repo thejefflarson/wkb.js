@@ -5,7 +5,7 @@
   } else {
     wkb = this.wkb = {};
   }
-
+  wkb.root = this
   wkb.VERSION = "0.0.1";
 }).call(this);
 wkb.Type = {
@@ -30,6 +30,10 @@ wkb.Type = {
     Uint32:  4, // unsigned int
     Float32: 4, // float
     Float64: 8  // double
+  },
+
+  c : {
+    
   },
   // TODO: remove ecmascript 5 reduce and keys.
   toString : function(id){
@@ -97,11 +101,12 @@ wkb.Utils.mixin(wkb.Factory.prototype, {
   },
 
   parseWKB : function(data){
-    return this._dispatch(data, 'parseWKB');
+    wkb.Utils.assert(wkb.root.DataView, "Can't parse Binary without DataView");
+    data = new DataView(data);
+    return this._dispatch(data, data.getUint32(1), 'parseWKB');
   },
 
-  _dispatch : function(data, func){
-    var num = data.getUint32(1);
+  _dispatch : function(data, num, func){
     switch(num){
       case wkb.Type.k.wkbPoint:
         return wkb.Point[func](data);
@@ -132,8 +137,7 @@ wkb.Utils.mixin(wkb.Geometry.prototype, {
     return "<" + wkb.Type.toString(this.type) +
       (this.geometries && this.geometries.length > 0
         ? " " + this.geometries.map(function(it){ return it.toString(); }).join(", ")
-        : "") +
-      ">";
+        : "") + ">";
   }
 });
 
@@ -141,35 +145,15 @@ wkb.Geometry.extend = wkb.Utils.extend;
 
 wkb.Utils.mixin(wkb.Geometry, {
   registerParser : function(type, fn){
-    var cb;
-    switch(type){
-      case "WKB":
-        cb = function() {
-          wkb.Utils.assert(DataView && ArrayBuffer,
-                           "Can't parse WKB without DataView and ArrayBuffer");
-          return fn.apply(this, arguments);
-        };
-        break;
-      case "JSON":
-        cb = function() {
-          wkb.Utils.assert(wkb.root.JSON,
-                           "Can't parse GeoJSON without json support");
-          return fn.apply(this, arguments);
-        };
-        break;
-      default:
-        cb = fn;
-    }
     this["parse" + type] = function(data) {
       var instance = new (this.prototype.constructor)(data);
-      var mixin = cb(instance);
+      var mixin = fn(instance);
       wkb.Utils.mixin(instance, mixin);
       if(instance.parse) instance.parse();
       return instance;
     };
   }
 });
-
 
 // templates
 wkb.Geometry.registerParser("WKB", function(instance){

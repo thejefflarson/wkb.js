@@ -21,6 +21,10 @@ wkb.Type = {
     Float32: 4, // float
     Float64: 8  // double
   },
+
+  c : {
+    
+  },
   // TODO: remove ecmascript 5 reduce and keys.
   toString : function(id){
     var arr = Object.keys(this.k).reduce(function(memo, k){

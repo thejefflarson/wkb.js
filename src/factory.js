@@ -6,11 +6,12 @@ wkb.Utils.mixin(wkb.Factory.prototype, {
   },
 
   parseWKB : function(data){
-    return this._dispatch(data, 'parseWKB');
+    wkb.Utils.assert(wkb.root.DataView, "Can't parse Binary without DataView");
+    data = new DataView(data);
+    return this._dispatch(data, data.getUint32(1), 'parseWKB');
   },
 
-  _dispatch : function(data, func){
-    var num = data.getUint32(1);
+  _dispatch : function(data, num, func){
     switch(num){
       case wkb.Type.k.wkbPoint:
         return wkb.Point[func](data);

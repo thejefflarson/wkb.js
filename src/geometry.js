@@ -10,8 +10,7 @@ wkb.Utils.mixin(wkb.Geometry.prototype, {
     return "<" + wkb.Type.toString(this.type) +
       (this.geometries && this.geometries.length > 0
         ? " " + this.geometries.map(function(it){ return it.toString(); }).join(", ")
-        : "") +
-      ">";
+        : "") + ">";
   }
 });
 
@@ -19,35 +18,15 @@ wkb.Geometry.extend = wkb.Utils.extend;
 
 wkb.Utils.mixin(wkb.Geometry, {
   registerParser : function(type, fn){
-    var cb;
-    switch(type){
-      case "WKB":
-        cb = function() {
-          wkb.Utils.assert(DataView && ArrayBuffer,
-                           "Can't parse WKB without DataView and ArrayBuffer");
-          return fn.apply(this, arguments);
-        };
-        break;
-      case "JSON":
-        cb = function() {
-          wkb.Utils.assert(wkb.root.JSON,
-                           "Can't parse GeoJSON without json support");
-          return fn.apply(this, arguments);
-        };
-        break;
-      default:
-        cb = fn;
-    }
     this["parse" + type] = function(data) {
       var instance = new (this.prototype.constructor)(data);
-      var mixin = cb(instance);
+      var mixin = fn(instance);
       wkb.Utils.mixin(instance, mixin);
       if(instance.parse) instance.parse();
       return instance;
     };
   }
 });
-
 
 // templates
 wkb.Geometry.registerParser("WKB", function(instance){
