@@ -1,7 +1,7 @@
 wkb.Factory = function(){};
 
 wkb.Utils.mixin(wkb.Factory.prototype, {
-  parseWKT : function(data){
+  parseWKT = function(data){
     return this._dispatch(data, 'parseWKT');
   },
 
