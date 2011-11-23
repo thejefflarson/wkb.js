@@ -2,7 +2,7 @@ wkb.Factory = function(){};
 
 wkb.Utils.mixin(wkb.Factory.prototype, {
   parseWKT = function(data){
-    return this._dispatch(data, 'parseWKT');
+    //return this._dispatch(data, 'parseWKT');
   },
 
   parseWKB : function(data){
@@ -18,7 +18,7 @@ wkb.Utils.mixin(wkb.Factory.prototype, {
       case wkb.Type.k.wkbLineString:
         return wkb.LineString[func](data);
       case wkb.Type.k.wkbPolygon:
-        return wkb.Type.k.Polygon[func](data);
+        return wkb.Polygon[func](data);
       case wkb.Type.k.wkbMultiLineString:
         return wkb.MultiLineString[func](data);
       case wkb.Type.k.wkbMultiPolygon:
