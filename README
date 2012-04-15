@@ -1,0 +1,14 @@
+0000 0000 0600 0000 0100 0000 0003 0000
+0001 0000 264f c053 6a74 85e3 da2f 4043
+6e05 2d66 6a98 c053 6a71 21ab 4b73 4043
+6dfe 21d9 6e9b c053 6a6e 935b 91f7 4043
+6df6 b1a2 a4db c053 6a6d d69d 3027 4043
+6df4 3419 e300 c053 6a6c ebbb a55d 4043
+6df1 e8e6 0807 c053 6a6b 0d95 13f9 4043
+
+
+Partial WKB parsing in js, a simple experiment. See:
+
+http://portal.opengeospatial.org/files/?artifact_id=829
+
+for the spec.

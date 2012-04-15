@@ -22,7 +22,7 @@ wkb.Utils.mixin(wkb.Geometry, {
     this["parse" + type] = function(data) {
       var instance = new (this.prototype.constructor)(data);
       var mixin = fn();
-      wkb.Utils.mixin(instance, mixin);
+      instance = wkb.Utils.mixin(instance, mixin);
       if(instance.parse) instance.parse();
       return instance;
     };
@@ -55,7 +55,6 @@ wkb.Utils.mixin(wkb.Geometry, {
 
     parse : function(){
       var type = this.data.getUint32(1, this.endian());
-      wkb.Utils.assert(type !== wkb.Type.k.wkbUnknown, type === this.type,"Wrong type for " + this);
       var offset = this.byteOffset();
       for(var i = 0; i < this.numGeometries(); i++){
         var child = this._peekChild().parseWKB(new DataView(this.data.buffer, this.data.byteOffset + offset));
@@ -73,11 +72,11 @@ wkb.Utils.mixin(wkb.Geometry, {
   }
 
   wkb.Geometry.registerParser("WKB", function(instance){
-    return wkb.Geometry.WKBTemplate;
+    return WKBTemplate;
   });
 
   wkb.Geometry.registerParser("WKT", function(text){
-    return wkb.Geometry.WKTTemplate;
+    return WKTTemplate;
   });
 
   wkb.Geometry.registerParser("JSON", function(json){});

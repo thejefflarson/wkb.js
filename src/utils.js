@@ -22,7 +22,7 @@ wkb.Utils = (function(){
       var args = [].slice.call(arguments);
       var message = args.pop();
       var go = false;
-      for(int i = 0; i < args.length; i++)
+      for(var i = 0; i < args.length; i++)
         go = go && args[i];
       if(!go && this.debug) throw new Error(message);
     },

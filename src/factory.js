@@ -1,12 +1,12 @@
 wkb.Factory = function(){};
 
 wkb.Utils.mixin(wkb.Factory.prototype, {
-  parseWKT = function(data){
+  parseWKT : function(data){
     //return this._dispatch(data, 'parseWKT');
   },
 
   parseWKB : function(data){
-    wkb.Utils.assert(wkb.root.DataView, "Can't parse Binary without DataView");
+    //wkb.Utils.assert(DataView, "Can't parse Binary without DataView");
     data = new DataView(data);
     return this._dispatch(data, data.getUint32(1), 'parseWKB');
   },

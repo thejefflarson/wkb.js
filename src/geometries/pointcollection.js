@@ -15,7 +15,7 @@ wkb.PointCollection.registerParser("WKB", function(instance){
     },
 
     pointAt : function(idx){
-      wkb.Utils.assert(idx < this.numGeometries(), "Out of range.");
+      //wkb.Utils.assert(idx < this.numGeometries(), "Out of range.");
       var point = wkb.Point.parseWKB(new DataView(this.data.buffer,
         this.data.byteOffset + wkb.Type.b.Uint32 + wkb.Type.b.Float64 * 2 * idx));
       point.endian = this.endian;
